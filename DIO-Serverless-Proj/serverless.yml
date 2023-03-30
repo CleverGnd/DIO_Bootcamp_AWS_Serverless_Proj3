@@ -1,0 +1,72 @@
+service: DIO-Serverless-Proj
+frameworkVersion: '3'
+
+# Configurações do provedor do serviço AWS
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: sa-east-1
+  # Configuração do papel IAM para a função lambda
+  iam:
+      role:
+          # Lista de permissões do papel IAM
+          statements:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:UpdateItem
+                - dynamodb:GetItem
+                - dynamodb:Scan
+              # Recurso acessado pelas permissões
+              Resource:
+                - arn:aws:dynamodb:sa-east-1:403899547577:table/ItemTableNew
+
+# Configurações das funções lambda do serviço
+functions:
+  api:
+    handler: src/index.handler
+    events:
+      - http:
+          path: /
+          method: get
+  insertItem:
+    handler: src/insertItem.handler
+    events:
+      - http:
+          path: /item
+          method: post
+  fetchItems:
+    handler: src/fetchItems.handler
+    events:
+      - http:
+          path: /items
+          method: get
+  fetchItem:
+    handler: src/fetchItem.handler
+    events:
+      - http:
+          path: /items/{id}
+          method: get
+  updateItem:
+    handler: src/updateItem.handler
+    events:
+      - http:
+          path: /items/{id}
+          method: put           
+
+# Definição de recursos do serviço
+resources:
+  # Definição da tabela do DynamoDB utilizada pelo serviço
+  Resources:
+    ItemTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+          TableName: ItemTableNew
+          BillingMode: PAY_PER_REQUEST
+          AttributeDefinitions:
+            # Definição do atributo 'id' como chave primária da tabela
+            - AttributeName: id
+              AttributeType: S
+          KeySchema:
+            - AttributeName: id
+              KeyType: HASH
